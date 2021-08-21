@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  font-family: "Comfortaa", sans-serif;
+}
+
+header,
+main,
+footer {
+  @apply max-w-md mx-auto p-10;
+}
+
+.__react_component_tooltip {
+  transition: opacity 0.1s ease-in-out !important;
+  opacity: 0 !important;
+}
+
+.__react_component_tooltip.show {
+  opacity: 1 !important;
+}

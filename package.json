@@ -1,0 +1,28 @@
+{
+  "name": "word-4-word",
+  "version": "1.0.0",
+  "description": "A game where you get from one 4-letter word to another changing 1 letter at a time",
+  "scripts": {
+    "compile": "cd ./src/data/ && g++ pars.cpp -o pars.out && pars.out && rm pars.out && cd ../..",
+    "build": "preact build",
+    "serve": "sirv build --port 8080 --cors --single",
+    "dev": "preact watch"
+  },
+  "eslintConfig": {
+    "extends": "preact"
+  },
+  "dependencies": {
+    "@popperjs/core": "^2.9.3",
+    "preact": "^10.3.2",
+    "preact-render-to-string": "^5.1.4",
+    "react-tooltip": "^4.2.21",
+    "tailwindcss": "^2.2.7"
+  },
+  "devDependencies": {
+    "eslint": "^6.0.1",
+    "eslint-config-preact": "^1.1.0",
+    "preact-cli": "^3.0.0",
+    "preact-cli-tailwind": "^3.0.0",
+    "yaml-loader": "^0.6.0"
+  }
+}
