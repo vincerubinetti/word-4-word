@@ -6,5 +6,13 @@ module.exports = (config, env, helpers) => {
     type: "json",
     use: "yaml-loader",
   });
+  config.module.rules.push({
+    test: /\.dat/,
+    use: [
+      {
+        loader: "file-loader",
+      },
+    ],
+  });
   tailwind(config, env, helpers);
 };

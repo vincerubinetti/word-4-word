@@ -1,6 +1,9 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
+import { Global } from "..";
+import difficulties from "../data/difficulties.yaml";
 
-const Ribbon = ({ colors }) => {
+const Ribbon = ({ children }) => {
+  const { level } = useContext(Global);
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
   const ref = useRef();
@@ -23,52 +26,59 @@ const Ribbon = ({ colors }) => {
   const creaseV = 0.3 * height; // vertical length of crease segment
   const tail = 1.5 * height; // length of tail segment
 
+  // get fill colors
+  const colors = difficulties[level].colors;
+
   return (
-    <svg
-      ref={ref}
-      viewBox={`-${width / 2} -${height / 2} ${width} ${height}`}
-      className="absolute overflow-visible inset-0 w-full h-full"
-      style={{ zIndex: -1 }}
-      preserveAspectRatio="xMidYMid slice"
-    >
-      <path
-        className={["fill-current", colors[2]].join(" ")}
-        d={`
-          M ${-width / 2 + creaseH} ${-height / 2 + creaseV}
-          h ${-tail}
-          l ${height / 2} ${height / 2}
-          l ${-height / 2} ${height / 2}
-          h ${tail}
-          z
-          M ${width / 2 - creaseH} ${-height / 2 + creaseV}
-          h ${tail}
-          l ${-height / 2} ${height / 2}
-          l ${height / 2} ${height / 2}
-          h ${-tail}
-          z
-        `}
-      />
-      <path
-        className={["fill-current", colors[1]].join(" ")}
-        d={`
-          M ${-width / 2} ${-height / 2}
-          l ${creaseH} ${creaseV}
-          v ${height}
-          l ${-creaseH} ${-creaseV}
-          M ${width / 2} ${-height / 2}
-          l ${-creaseH} ${creaseV}
-          v ${height}
-          l ${creaseH} ${-creaseV}
-        `}
-      />
-      <rect
-        className={["fill-current", colors[0]].join(" ")}
-        x={-width / 2}
-        y={-height / 2}
-        width={width}
-        height={height}
-      />
-    </svg>
+    <div className="relative max-w-sm mx-auto text-center text-lg text-white h-8">
+      <div className="flex justify-center items-center h-full">{children}</div>
+
+      <svg
+        ref={ref}
+        viewBox={`-${width / 2} -${height / 2} ${width} ${height}`}
+        className="absolute overflow-visible inset-0 w-full h-full"
+        style={{ zIndex: -1 }}
+        preserveAspectRatio="xMidYMid slice"
+      >
+        <path
+          className={["fill-current", colors[2]].join(" ")}
+          d={`
+            M ${-width / 2 + creaseH} ${-height / 2 + creaseV}
+            h ${-tail}
+            l ${height / 2} ${height / 2}
+            l ${-height / 2} ${height / 2}
+            h ${tail}
+            z
+            M ${width / 2 - creaseH} ${-height / 2 + creaseV}
+            h ${tail}
+            l ${-height / 2} ${height / 2}
+            l ${height / 2} ${height / 2}
+            h ${-tail}
+            z
+          `}
+        />
+        <path
+          className={["fill-current", colors[1]].join(" ")}
+          d={`
+            M ${-width / 2} ${-height / 2}
+            l ${creaseH} ${creaseV}
+            v ${height}
+            l ${-creaseH} ${-creaseV}
+            M ${width / 2} ${-height / 2}
+            l ${-creaseH} ${creaseV}
+            v ${height}
+            l ${creaseH} ${-creaseV}
+          `}
+        />
+        <rect
+          className={["fill-current", colors[0]].join(" ")}
+          x={-width / 2}
+          y={-height / 2}
+          width={width}
+          height={height}
+        />
+      </svg>
+    </div>
   );
 };
 

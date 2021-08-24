@@ -1,13 +1,13 @@
 /*
-    This c++ program pre-computes the "par distance" between each pair of words
-    in the regular dictionary. The par is the length of the shortest path
-    possible between the start and end words, using only words in the regular
-    dictionary. The Floyd-Warshall algorithm to compute the pars is too slow to
-    be used in real time, or to be implemented in JavaScript at all. This
-    exports a triangular matrix of pars (1 byte each).
+    This C++ program pre-computes the par distance between each pair of
+    regular words, i.e. shortest path between them using only regular words.
+    
+    The Floyd-Warshall algorithm used to do this is too slow to be used in real
+    time, or to be implemented in JavaScript at all.
 */
 
 // includes
+#include <limits.h>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -15,15 +15,13 @@
 
 using namespace std;
 
-const int Infinity = 999999;
+// large number constant for path finding
+const int Infinity = UCHAR_MAX;
 
 // word object
 struct Word {
     string text;
     vector<Word*> links;
-
-    unsigned char explored;
-    Word* previous;
 
     Word(string word)
     {
@@ -34,34 +32,32 @@ struct Word {
 // checks if two words are exactly 1 letter different
 bool OneLetterDifferent(string wordA, string wordB)
 {
-    if (wordA.length() != 4 || wordB.length() != 4)
-        return false;
-
-    unsigned int diffChars = 0;
-    for (unsigned int i = 0; i < wordA.length(); i++) {
-        if (wordA[i] != wordB[i])
-            diffChars++;
-        if (diffChars > 1)
+    unsigned int diff = 0;
+    for (unsigned int letter = 0; letter < wordA.length(); letter++) {
+        if (wordA[letter] != wordB[letter])
+            diff++;
+        if (diff > 1)
             return false;
     }
 
-    return diffChars == 1;
+    return diff == 1;
 }
 
 // checks if two words are linked
 bool AreLinked(Word* wordA, Word* wordB)
 {
-    for (unsigned int i = 0; i < wordA->links.size(); i++)
-        if (wordA->links[i] == wordB)
+    for (unsigned int link = 0; link < wordA->links.size(); link++)
+        if (wordA->links[link] == wordB)
             return true;
 
-    for (unsigned int i = 0; i < wordB->links.size(); i++)
-        if (wordB->links[i] == wordA)
+    for (unsigned int link = 0; link < wordB->links.size(); link++)
+        if (wordB->links[link] == wordA)
             return true;
 
     return false;
 }
 
+// main processing
 int main()
 {
     cout << "importing dictionary..." << endl;
@@ -71,7 +67,8 @@ int main()
     ifstream dictionaryFile("dictionary.yaml");
     string line;
     while (getline(dictionaryFile, line))
-        if (line.find("regular") != string::npos)
+        // only extract regular words
+        if (line.find("1") != string::npos)
             Dictionary.push_back(new Word(line.substr(0, 4)));
     dictionaryFile.close();
     DictionarySize = Dictionary.size();
@@ -87,45 +84,54 @@ int main()
 
     cout << "linking words..." << endl;
 
-    for (unsigned int i = 0; i < DictionarySize; i++)
-        for (unsigned int j = 0; j < DictionarySize; j++)
-            if (i < j)
-                if (OneLetterDifferent(Dictionary[i]->text, Dictionary[j]->text)) {
-                    Dictionary[i]->links.push_back(Dictionary[j]);
-                    Dictionary[j]->links.push_back(Dictionary[i]);
+    // link together words that are one letter different
+    for (unsigned int x = 0; x < DictionarySize; x++)
+        for (unsigned int y = 0; y < DictionarySize; y++)
+            if (x < y)
+                if (OneLetterDifferent(Dictionary[x]->text, Dictionary[y]->text)) {
+                    Dictionary[x]->links.push_back(Dictionary[y]);
+                    Dictionary[y]->links.push_back(Dictionary[x]);
                 }
 
     cout << "words linked" << endl;
 
     cout << "processing pars..." << endl;
 
-    // floyd warshall
+    // floyd warshall algorithm
+
+    // init 2d array of pars
     unsigned int** Pars;
     Pars = new unsigned int*[DictionarySize];
-    for (unsigned int i = 0; i < DictionarySize; i++)
-        Pars[i] = new unsigned int[DictionarySize];
+    for (unsigned int x = 0; x < DictionarySize; x++)
+        Pars[x] = new unsigned int[DictionarySize];
 
-    for (unsigned int i = 0; i < DictionarySize; i++)
-        for (unsigned int j = 0; j < DictionarySize; j++) {
-            if (i == j)
-                Pars[i][j] = 0;
+    // fill array with values
+    for (unsigned int x = 0; x < DictionarySize; x++)
+        for (unsigned int y = 0; y < DictionarySize; y++) {
+            // main diagonal cells, where start/end words are same
+            if (x == y)
+                Pars[x][y] = 0;
+            // cells where start/end words are directly linked
+            else if (AreLinked(Dictionary[x], Dictionary[y]))
+                Pars[x][y] = 1;
+            // all other cells, where dist between start/end words unknown
             else
-                Pars[i][j] = Infinity;
+                Pars[x][y] = Infinity;
         }
 
-    for (unsigned int i = 0; i < DictionarySize; i++)
-        for (unsigned int j = 0; j < DictionarySize; j++)
-            if (i < j)
-                if (AreLinked(Dictionary[i], Dictionary[j])) {
-                    Pars[i][j] = 1;
-                    Pars[j][i] = 1;
-                }
+    // reduce and find min paths
+    for (unsigned int z = 0; z < DictionarySize; z++)
+        for (unsigned int x = 0; x < DictionarySize; x++)
+            for (unsigned int y = 0; y < DictionarySize; y++)
+                if (Pars[x][y] > Pars[x][z] + Pars[z][y])
+                    Pars[x][y] = Pars[x][z] + Pars[z][y];
 
-    for (unsigned int k = 0; k < DictionarySize; k++)
-        for (unsigned int i = 0; i < DictionarySize; i++)
-            for (unsigned int j = 0; j < DictionarySize; j++)
-                if (Pars[i][j] > Pars[i][k] + Pars[k][j])
-                    Pars[i][j] = Pars[i][k] + Pars[k][j];
+    // for convenience:
+    // increment by 1 to reflect number of words in path rather than # of steps
+    // set cells with infinite value to 0 (by forcing overflow)
+    for (unsigned int x = 0; x < DictionarySize; x++)
+        for (unsigned int y = 0; y < DictionarySize; y++)
+            Pars[x][y]++;
 
     cout << "pars processed" << endl;
 
@@ -134,18 +140,20 @@ int main()
     ofstream file;
     file.open("pars.dat", fstream::binary);
 
-    for (unsigned int i = 0; i < DictionarySize; i++)
-        for (unsigned int j = 0; j < DictionarySize; j++)
-            if (i < j)
-                file.write(reinterpret_cast<char*>(&Pars[i][j]), sizeof(unsigned char));
+    // write triangular matrix of pars, 1 byte each
+    for (unsigned int x = 0; x < DictionarySize; x++)
+        for (unsigned int y = 0; y < DictionarySize; y++)
+            if (x < y)
+                file.write(reinterpret_cast<char*>(&Pars[x][y]), sizeof(unsigned char));
 
     file.close();
 
     cout << "pars exported" << endl;
 
-    for (int i = 0; i < DictionarySize; i++) {
-        delete Dictionary[i];
-        delete[] Pars[i];
+    // clean up
+    for (int word = 0; word < DictionarySize; word++) {
+        delete Dictionary[word];
+        delete[] Pars[word];
     }
     delete[] Pars;
 

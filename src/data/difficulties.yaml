@@ -2,23 +2,59 @@
   min: 3
   max: 5
   unlock: 0
+  colors:
+    - text-sky-500
+    - text-sky-600
+    - text-sky-400
+    - hover:bg-sky-500
+    - focus:bg-sky-500
 - text: Easy
   min: 6
   max: 8
   unlock: 10
+  colors:
+    - text-green-500
+    - text-green-600
+    - text-green-400
+    - hover:bg-green-500
+    - focus:bg-green-500
 - text: Medium
   min: 9
   max: 11
   unlock: 100
+  colors:
+    - text-amber-500
+    - text-amber-600
+    - text-amber-400
+    - hover:bg-amber-500
+    - focus:bg-amber-500
 - text: Hard
   min: 12
   max: 14
   unlock: 1000
+  colors:
+    - text-rose-500
+    - text-rose-600
+    - text-rose-400
+    - hover:bg-rose-500
+    - focus:bg-rose-500
 - text: Expert
   min: 15
   max: 17
   unlock: 10000
+  colors:
+    - text-fuchsia-500
+    - text-fuchsia-600
+    - text-fuchsia-400
+    - hover:bg-fuchsia-500
+    - focus:bg-fuchsia-500
 - text: Master
   min: 18
-  max: 21
+  max: 22
   unlock: 100000
+  colors:
+    - text-gray-800
+    - text-gray-900
+    - text-gray-700
+    - hover:bg-gray-900
+    - focus:bg-gray-900

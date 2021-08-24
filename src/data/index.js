@@ -1,60 +1,71 @@
-import { Word, linkWords, oneLetterDifferent } from "../util/word";
+import dictionaryFile from "./dictionary.yaml";
+import parsFile from "./pars.dat";
+import { Word, wordsLinked } from "./word";
 
-import regular from "./regular-dictionary.txt";
-import special from "./special-dictionary.txt";
-import pars from "./pars.dat";
+// pause for specified time to let browser re-paint view and keep smooth
+const sleep = (ms = 0) =>
+  new Promise((resolve) => window.setTimeout(resolve, ms));
 
+// load dictionary and pars
 export const loadData = async () => {
-  // fetch data
-  let [regular, special, pars] = Promise.all([
-    getRegularDictionary(),
-    getSpecialDictionary(),
-    getPars(),
-  ]);
+  // load dictionary, discarding obscure words
+  const dictionary = await parseDictionary(dictionaryFile);
 
-  regular = parseDictionary(regular, "regular");
-  special = parseDictionary(special, "special");
-  const dictionary = [...regular, ...special];
-  linkDictionary(dictionary);
-  pars = pars.map((par) => parsePar(par, regular));
-  pars = [null, null, null, ...pars];
+  // load pars matrix
+  const pars = await parsePars(
+    new Uint8Array(await (await fetch(parsFile)).arrayBuffer()),
+    dictionary
+  );
+
   return { dictionary, pars };
 };
 
-// fetch dictionary of regular words
-const getRegularDictionary = async () => (await fetch(regular)).text();
+// transform data from dictionary file into more convenient structure
+const parseDictionary = async (dictionary) => {
+  // transform map to list of objects and discard obscure words
+  dictionary = Object.entries(dictionary)
+    .map(([text, type], index) => new Word(text, type, index))
+    .filter(({ type }) => type < 3);
 
-// fetch dictionary of special words
-const getSpecialDictionary = async () => (await fetch(special)).text();
-
-// fetch matrix of pars
-const getPars = async () => (await fetch(pars)).arrayBuffer();
-
-const parseDictionary = (dictionary, type) =>
-  dictionary
-    .split("\n")
-    .map((word) => word.trim())
-    .filter((word) => word)
-    .map((word, index) => new Word(word, index, type));
-
-const linkDictionary = (dictionary) => {
-  for (const wordA of dictionary) {
-    for (const wordB of dictionary) {
-      if (oneLetterDifferent(wordA, wordB)) linkWords(wordA, wordB);
+  // link dictionary words together
+  for (let x = 0; x < dictionary.length; x++) {
+    if (x % 50 === 0) await sleep(); // throttle
+    for (let y = 0; y < dictionary.length; y++) {
+      if (x < y) {
+        if (wordsLinked(dictionary[x], dictionary[y])) {
+          dictionary[x].links.push(dictionary[y]);
+          dictionary[y].links.push(dictionary[x]);
+        }
+      }
     }
   }
+
   return dictionary;
 };
 
-const parsePar = (par, dictionary) => {
-  const pairs = [];
-  if (par) {
-    window.localStorage.test = btoa(
-      String.fromCharCode(...new Uint8Array(par))
-    );
-    const bytes = new Uint16Array(par);
-    for (let index = 0; index < bytes.length; index += 2)
-      pairs.push([dictionary[bytes[index]], dictionary[bytes[index + 1]]]);
+// transform data from pars file into more convenient structure
+export const parsePars = async (matrix, dictionary) => {
+  // get dictionary of just regular words
+  dictionary = dictionary.filter(({ type }) => type === 1);
+
+  // group pairs of words into bins by par value
+  const pars = {};
+  let index = 0;
+  for (let x = 0; x < dictionary.length; x++) {
+    if (x % 50 === 0) await sleep(); // throttle
+    for (let y = 0; y < dictionary.length; y++) {
+      if (x < y) {
+        const par = matrix[index];
+        index++;
+        if (!pars[par]) pars[par] = [];
+        pars[par].push([dictionary[x], dictionary[y]]);
+      }
+    }
   }
-  return pairs;
+
+  // change 0 par to the infinity it truly represents from c++ script
+  pars["∞"] = pars["0"];
+  delete pars["0"];
+
+  return pars;
 };

@@ -9,12 +9,53 @@
 header,
 main,
 footer {
-  @apply max-w-md mx-auto p-10;
+  @apply max-w-5xl mx-auto p-10;
+}
+
+header {
+  @apply mt-10;
+}
+
+h1 {
+  @apply text-center text-3xl;
+}
+
+h2 {
+  @apply text-center text-2xl;
+}
+
+h3 {
+  @apply text-xl;
+}
+
+h1:not(:first-child),
+h2:not(:first-child),
+h3:not(:first-child) {
+  @apply mt-10;
+}
+
+h1:not(:last-child),
+h2:not(:last-child),
+h3:not(:last-child) {
+  @apply mb-10;
+}
+
+p {
+  @apply leading-8 text-justify;
+}
+
+p:not(:first-child) {
+  @apply mt-5;
+}
+
+p:not(:last-child) {
+  @apply mb-5;
 }
 
 .__react_component_tooltip {
   transition: opacity 0.1s ease-in-out !important;
   opacity: 0 !important;
+  max-width: 300px;
 }
 
 .__react_component_tooltip.show {

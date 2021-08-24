@@ -1,3 +1,3 @@
-const Game = () => <div>hello</div>;
+const Game = () => <div>Game</div>;
 
 export default Game;
